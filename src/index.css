@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The Daily Hub Design System - Beautiful gradients and glassmorphism */
+
+@layer base {
+  :root {
+    /* Primary brand colors - Purple to blue gradient theme */
+    --background: 215 28% 97%;
+    --foreground: 220 13% 18%;
+
+    /* Glass card system */
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+    --glass: 220 20% 98%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+
+    /* Brand gradient colors */
+    --primary: 250 84% 54%;
+    --primary-glow: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 13% 18%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Widget accent colors */
+    --accent-orange: 25 95% 53%;
+    --accent-green: 142 76% 36%;
+    --accent-blue: 221 83% 53%;
+    --accent-purple: 258 90% 66%;
+    
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 13% 18%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 250 84% 54%;
+
+    --radius: 1rem;
+
+    /* Custom gradients for The Daily Hub */
+    --gradient-primary: linear-gradient(135deg, hsl(250 84% 54%), hsl(258 90% 66%));
+    --gradient-hero: linear-gradient(135deg, hsl(215 28% 97%), hsl(220 26% 95%));
+    --gradient-glass: linear-gradient(135deg, 
+      hsla(0 0% 100% / 0.25), 
+      hsla(0 0% 100% / 0.1));
+    --gradient-widget: linear-gradient(135deg,
+      hsla(0 0% 100% / 0.8),
+      hsla(0 0% 100% / 0.4));
+    
+    /* Shadows */
+    --shadow-glass: 0 8px 32px hsla(220 13% 18% / 0.1);
+    --shadow-widget: 0 4px 20px hsla(220 13% 18% / 0.08);
+    --shadow-hover: 0 8px 40px hsla(250 84% 54% / 0.15);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark theme - Rich midnight blue to black gradient */
+    --background: 220 27% 8%;
+    --foreground: 210 40% 98%;
+
+    /* Glass card system for dark */
+    --card: 220 30% 12%;
+    --card-foreground: 210 40% 98%;
+    --glass: 220 25% 15%;
+
+    --popover: 220 30% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Brand colors for dark mode */
+    --primary: 258 90% 66%;
+    --primary-glow: 270 95% 75%;
+    --primary-foreground: 220 27% 8%;
+
+    --secondary: 220 25% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 25% 15%;
+    --muted-foreground: 215 25% 70%;
+
+    /* Widget accent colors for dark */
+    --accent-orange: 25 95% 53%;
+    --accent-green: 142 76% 36%;
+    --accent-blue: 221 83% 53%;
+    --accent-purple: 258 90% 66%;
+
+    --accent: 220 25% 15%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 25% 20%;
+    --input: 220 25% 15%;
+    --ring: 258 90% 66%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(258 90% 66%), hsl(270 95% 75%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 27% 8%), hsl(220 25% 12%));
+    --gradient-glass: linear-gradient(135deg, 
+      hsla(220 30% 20% / 0.3), 
+      hsla(220 25% 15% / 0.1));
+    --gradient-widget: linear-gradient(135deg,
+      hsla(220 30% 20% / 0.8),
+      hsla(220 25% 15% / 0.4));
+
+    /* Dark shadows */
+    --shadow-glass: 0 8px 32px hsla(220 27% 8% / 0.5);
+    --shadow-widget: 0 4px 20px hsla(220 27% 8% / 0.3);
+    --shadow-hover: 0 8px 40px hsla(258 90% 66% / 0.25);
+
+    --sidebar-background: 220 30% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 258 90% 66%;
+    --sidebar-primary-foreground: 220 27% 8%;
+    --sidebar-accent: 220 25% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 25% 20%;
+    --sidebar-ring: 258 90% 66%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-background to-secondary text-foreground min-h-screen;
+  }
+}
+
+@layer components {
+  /* Glass widget cards */
+  .widget-card {
+    @apply bg-[var(--gradient-widget)] backdrop-blur-xl border border-border rounded-2xl p-6 shadow-[var(--shadow-widget)] transition-[var(--transition-smooth)] hover:shadow-[var(--shadow-hover)] hover:scale-[1.02];
+  }
+  
+  /* Focus states and interactions */
+  .widget-interactive {
+    @apply cursor-pointer hover:bg-[var(--gradient-glass)];
+  }
+  
+  /* Button variants for The Daily Hub */
+  .btn-gradient {
+    @apply bg-[var(--gradient-primary)] text-primary-foreground font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-[var(--shadow-hover)] transition-[var(--transition-smooth)] hover:scale-105;
+  }
+  
+  .btn-glass {
+    @apply bg-[var(--gradient-glass)] backdrop-blur-lg border border-border text-foreground font-medium px-4 py-2 rounded-lg hover:bg-accent transition-[var(--transition-smooth)];
+  }
+
+  /* Widget color themes */
+  .widget-focus {
+    @apply border-l-4 border-l-[hsl(var(--accent-orange))] bg-[var(--gradient-widget)];
+  }
+  
+  .widget-habits {
+    @apply border-l-4 border-l-[hsl(var(--accent-green))] bg-[var(--gradient-widget)];
+  }
+  
+  .widget-mood {
+    @apply border-l-4 border-l-[hsl(var(--accent-blue))] bg-[var(--gradient-widget)];
+  }
+
+  /* Animations */
+  .fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-[var(--gradient-primary)] bg-clip-text text-transparent;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
