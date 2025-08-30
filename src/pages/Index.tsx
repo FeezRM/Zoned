@@ -1,7 +1,12 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
+import OnboardingGate from "@/components/OnboardingGate";
 
 const Index = () => {
-  return <DashboardLayout />;
+  return (
+    <OnboardingGate>
+      <DashboardLayout />
+    </OnboardingGate>
+  );
 };
 
 export default Index;

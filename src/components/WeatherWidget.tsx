@@ -1,8 +1,22 @@
 import { Cloud, Sun, CloudRain, Wind, MapPin, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useWeather } from "@/hooks/useWeather";
+import useProfile from "@/lib/useProfile";
+import { upsertProfile } from "@/lib/profiles";
 
 export const WeatherWidget = () => {
-  const { weather, loading, error } = useWeather();
+  const { profile, refresh: refreshProfile } = useProfile()
+  const [unit, setUnit] = useState<'c'|'f'>('c')
+  const [initialized, setInitialized] = useState(false)
+  const { weather, loading, error, refresh } = useWeather(unit);
+
+  useEffect(() => {
+    if (profile && !initialized) {
+      const prefUnit = (profile.preferences?.weather_unit ?? 'c') as 'c'|'f'
+      setUnit(prefUnit)
+      setInitialized(true)
+    }
+  }, [profile, initialized])
 
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
@@ -36,6 +50,9 @@ export const WeatherWidget = () => {
         <div className="text-center">
           <Cloud className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Weather unavailable</p>
+          <div className="mt-2">
+            <button className="btn-glass text-xs px-3 py-1" onClick={refresh}>Retry</button>
+          </div>
         </div>
       </div>
     );
@@ -47,10 +64,36 @@ export const WeatherWidget = () => {
     <div className="widget-card h-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground">Weather</h3>
-        <div className="flex items-center gap-1 text-primary">
-          <MapPin className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-primary">
+            <MapPin className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              className={`px-2 py-1 text-xs rounded-md btn-glass ${unit==='c' ? 'text-foreground' : 'text-muted-foreground'}`}
+              onClick={async ()=> {
+                setUnit('c')
+                if (profile) {
+                  await upsertProfile({ id: profile.id, preferences: { ...(profile.preferences||{}), weather_unit: 'c' } })
+                  refreshProfile()
+                }
+              }}
+            >°C</button>
+            <button
+              className={`px-2 py-1 text-xs rounded-md btn-glass ${unit==='f' ? 'text-foreground' : 'text-muted-foreground'}`}
+              onClick={async ()=> {
+                setUnit('f')
+                if (profile) {
+                  await upsertProfile({ id: profile.id, preferences: { ...(profile.preferences||{}), weather_unit: 'f' } })
+                  refreshProfile()
+                }
+              }}
+            >°F</button>
+          </div>
         </div>
       </div>
+
+  {/* Location is derived from geolocation only; no manual entry */}
 
       {/* Current weather */}
       <div className="flex items-center justify-between mb-6">
@@ -71,7 +114,7 @@ export const WeatherWidget = () => {
         <div className="bg-accent/30 rounded-lg p-3 text-center">
           <Wind className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">Wind</p>
-          <p className="text-sm font-medium">{weather.windSpeed} mph</p>
+          <p className="text-sm font-medium">{weather.windSpeed} {unit==='f' ? 'mph' : 'km/h'}</p>
         </div>
         <div className="bg-accent/30 rounded-lg p-3 text-center">
           <div className="w-4 h-4 mx-auto mb-1 bg-blue-400 rounded-full opacity-60" />

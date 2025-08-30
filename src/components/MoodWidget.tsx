@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Heart, TrendingUp } from "lucide-react";
+import { listMoodEntries, insertMoodEntry } from '@/lib/data'
+import useSupabaseAuth from '@/lib/useSupabaseAuth'
 
 interface MoodEntry {
   emoji: string;
@@ -8,6 +10,7 @@ interface MoodEntry {
 }
 
 export const MoodWidget = () => {
+  const { user } = useSupabaseAuth()
   const moods: MoodEntry[] = [
     { emoji: "😄", label: "Amazing", value: 5 },
     { emoji: "😊", label: "Happy", value: 4 },
@@ -17,10 +20,27 @@ export const MoodWidget = () => {
   ];
 
   const [selectedMood, setSelectedMood] = useState<MoodEntry | null>(moods[1]);
-  const [weeklyAverage] = useState(3.8);
+  const [recent, setRecent] = useState<{ value: number }[]>([])
+
+  useEffect(() => {
+    if (!user) { setRecent([]); return }
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    listMoodEntries(sevenDaysAgo).then(({ data }) => {
+      if (data) setRecent(data.map((e) => ({ value: e.value })))
+    })
+  }, [user])
+
+  const weeklyAverage = useMemo(() => {
+    if (!recent.length) return 0
+    return recent.reduce((a, b) => a + b.value, 0) / recent.length
+  }, [recent])
 
   const handleMoodSelect = (mood: MoodEntry) => {
     setSelectedMood(mood);
+    if (!user) return
+    insertMoodEntry(mood.value, mood.label, mood.emoji).then(({ data }) => {
+      if (data) setRecent((prev) => [{ value: data.value }, ...prev])
+    })
   };
 
   const getMoodColor = (value: number) => {
@@ -48,15 +68,15 @@ export const MoodWidget = () => {
         </div>
       )}
 
-      {/* Mood selector */}
-      <div className="mb-6">
+  {/* Mood selector */}
+  <div className="mb-6 w-full">
         <p className="text-sm font-medium text-foreground mb-3">Update your mood:</p>
-        <div className="flex justify-between gap-2">
+    <div className="grid grid-cols-5 gap-3 w-full">
           {moods.map((mood, index) => (
             <button
               key={mood.value}
               onClick={() => handleMoodSelect(mood)}
-              className={`flex-1 p-3 rounded-lg transition-all duration-200 hover:scale-110 fade-in ${
+      className={`w-full p-3 rounded-lg transition-all duration-200 hover:scale-105 fade-in ${
                 selectedMood?.value === mood.value
                   ? 'bg-[hsl(var(--accent-blue))]/20 border-2 border-[hsl(var(--accent-blue))]'
                   : 'bg-white/30 border border-white/20 hover:bg-white/50'

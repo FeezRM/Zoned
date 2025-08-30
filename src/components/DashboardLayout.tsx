@@ -4,11 +4,16 @@ import { FocusWidget } from "@/components/FocusWidget";
 import { HabitWidget } from "@/components/HabitWidget";
 import { MoodWidget } from "@/components/MoodWidget";
 import { NotesWidget } from "@/components/NotesWidget";
-import { Calendar, Settings, User } from "lucide-react";
+import { Calendar, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import HeaderAuth from "@/components/HeaderAuth";
+import useSupabaseAuth from "@/lib/useSupabaseAuth";
+import useProfile from "@/lib/useProfile";
 
 export const DashboardLayout = () => {
+  const { user } = useSupabaseAuth()
+  const { profile } = useProfile()
   const currentDate = new Date();
   const dateString = currentDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -21,6 +26,10 @@ export const DashboardLayout = () => {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const hours = currentDate.getHours()
+  const timeGreeting = hours < 12 ? 'Good morning' : hours < 18 ? 'Good afternoon' : 'Good evening'
+  const displayName = profile?.display_name || (user as any)?.user_metadata?.name || (user as any)?.email?.split('@')[0] || ''
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
@@ -47,9 +56,8 @@ export const DashboardLayout = () => {
                 <Button variant="ghost" size="sm" className="btn-glass">
                   <Settings className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="btn-glass">
-                  <User className="h-4 w-4" />
-                </Button>
+
+                <HeaderAuth />
               </div>
             </div>
           </div>
@@ -61,7 +69,7 @@ export const DashboardLayout = () => {
         {/* Welcome Section */}
         <div className="mb-8 fade-in" style={{ animationDelay: "0.1s" }}>
           <h2 className="text-3xl font-bold text-foreground mb-2">
-            Good morning! ✨
+            {timeGreeting}{displayName ? `, ${displayName}` : ''}! ✨
           </h2>
           <p className="text-lg text-muted-foreground">
             Ready to make today amazing? Here's your dashboard.
@@ -85,18 +93,18 @@ export const DashboardLayout = () => {
             <FocusWidget />
           </div>
 
-          {/* Habit Widget */}
-          <div className="slide-up" style={{ animationDelay: "0.5s" }}>
+          {/* Habit Widget (stretches to match Mood row height) */}
+          <div className="lg:col-span-2 slide-up" style={{ animationDelay: "0.5s" }}>
             <HabitWidget />
           </div>
 
-          {/* Mood Widget */}
-          <div className="slide-up" style={{ animationDelay: "0.6s" }}>
+          {/* Mood Widget - span to right side */}
+          <div className="slide-up lg:col-span-2 lg:col-start-2 xl:col-start-3 xl:col-span-2" style={{ animationDelay: "0.6s" }}>
             <MoodWidget />
           </div>
 
-          {/* Notes Widget - Spans 2 columns */}
-          <div className="lg:col-span-2 slide-up" style={{ animationDelay: "0.7s" }}>
+          {/* Notes Widget - full width row on large screens */}
+          <div className="slide-up lg:col-span-3 xl:col-span-4" style={{ animationDelay: "0.7s" }}>
             <NotesWidget />
           </div>
         </div>

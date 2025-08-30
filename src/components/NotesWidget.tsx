@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { Plus, Edit3, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { listNotes, insertNote, updateNote, deleteNoteRow } from '@/lib/data'
+import useSupabaseAuth from '@/lib/useSupabaseAuth'
 
 interface Note {
   id: string;
@@ -10,35 +13,35 @@ interface Note {
 }
 
 export const NotesWidget = () => {
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: "1",
-      content: "Remember to follow up with the client about the project timeline. They mentioned wanting to see wireframes by Friday.",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    },
-    {
-      id: "2",
-      content: "Great idea for improving the user onboarding flow - add tooltips to guide new users through key features.",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    },
-  ]);
+  const { user } = useSupabaseAuth()
+  const [notes, setNotes] = useState<Note[]>([]);
   
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
 
+  useEffect(() => {
+    if (!user) { setNotes([]); return }
+    listNotes().then(({ data }) => {
+      if (data) setNotes(data.map((n) => ({ id: n.id, content: n.content, timestamp: new Date(n.created_at) })))
+    })
+  }, [user])
+
   const addNote = () => {
-    if (newNote.trim()) {
-      const note: Note = {
-        id: Date.now().toString(),
-        content: newNote,
-        timestamp: new Date(),
-      };
-      setNotes([note, ...notes]);
-      setNewNote("");
-      setIsAdding(false);
-    }
+    const content = newNote.trim()
+    if (!content) return
+    const tempId = crypto.randomUUID()
+    const note: Note = { id: tempId, content, timestamp: new Date() }
+    setNotes((prev) => [note, ...prev])
+    setNewNote(""); setIsAdding(false)
+    insertNote(content).then(({ data, error }) => {
+      if (error || !data) {
+        setNotes((prev) => prev.filter((n) => n.id !== tempId))
+        return
+      }
+      setNotes((prev) => prev.map((n) => n.id === tempId ? { id: data.id, content: data.content, timestamp: new Date(data.created_at) } : n))
+    })
   };
 
   const startEdit = (note: Note) => {
@@ -47,11 +50,15 @@ export const NotesWidget = () => {
   };
 
   const saveEdit = () => {
-    setNotes(notes.map(note => 
-      note.id === editingId ? { ...note, content: editContent } : note
-    ));
-    setEditingId(null);
-    setEditContent("");
+    const id = editingId
+    if (!id) return
+    const old = notes.find((n) => n.id === id)?.content
+    setNotes((prev) => prev.map(note => note.id === id ? { ...note, content: editContent } : note))
+    updateNote(id, editContent).then(({ error }) => {
+      if (error) setNotes((prev) => prev.map(note => note.id === id ? { ...note, content: old ?? note.content } : note))
+    })
+    setEditingId(null)
+    setEditContent("")
   };
 
   const cancelEdit = () => {
@@ -60,7 +67,9 @@ export const NotesWidget = () => {
   };
 
   const deleteNote = (id: string) => {
-    setNotes(notes.filter(note => note.id !== id));
+    const prev = notes
+    setNotes(prev.filter(note => note.id !== id))
+    deleteNoteRow(id).then(({ error }) => { if (error) setNotes(prev) })
   };
 
   const formatTime = (date: Date) => {

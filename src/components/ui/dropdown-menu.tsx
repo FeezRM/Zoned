@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
+import { useState } from "react";
 
 import { cn } from "@/lib/utils"
 
@@ -178,6 +179,44 @@ const DropdownMenuShortcut = ({
   )
 }
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+
+interface CustomDropdownMenuProps {
+  options: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+}
+
+export const CustomDropdownMenu = ({ options, selected, onSelect }: CustomDropdownMenuProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full border border-muted-foreground rounded-lg p-3 text-left bg-muted hover:bg-muted/80 text-foreground"
+      >
+        {selected || "Select an option"}
+      </button>
+      {isOpen && (
+        <ul className="absolute z-10 w-full bg-muted border border-muted-foreground rounded-lg shadow-lg mt-1 text-foreground max-h-60 overflow-y-auto">
+          {options.map((option) => (
+            <li
+              key={option}
+              onClick={() => {
+                onSelect(option);
+                setIsOpen(false);
+              }}
+              className="p-3 hover:bg-muted/80 cursor-pointer whitespace-nowrap"
+              style={{ minWidth: '12rem', maxHeight: '15rem', overflowY: 'auto' }}
+            >
+              {option}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 export {
   DropdownMenu,
