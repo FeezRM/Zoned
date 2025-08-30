@@ -214,4 +214,4 @@ Issues and PRs are welcome while this is in active development. Please keep chan
 
 ## License
 
-TBD (personal project, WIP). If you plan to fork/ship this, open an issue so we can clarify licensing.
+© Zoned All Rights Reserved. If you plan to fork/ship this, open an issue so we can clarify licensing.
