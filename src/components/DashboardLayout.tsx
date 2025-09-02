@@ -4,15 +4,18 @@ import { FocusWidget } from "@/components/FocusWidget";
 import { HabitWidget } from "@/components/HabitWidget";
 import { MoodWidget } from "@/components/MoodWidget";
 import { NotesWidget } from "@/components/NotesWidget";
-import { Settings } from "lucide-react";
+import { Settings, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import HeaderAuth from "@/components/HeaderAuth";
 import useSupabaseAuth from "@/lib/useSupabaseAuth";
 import useProfile from "@/lib/useProfile";
-import EventsCalendarDialogButton from "@/components/EventsCalendarDialog";
+import { Link } from "react-router-dom";
+import SettingsDialog from "@/components/SettingsDialog";
+import { useState } from "react";
 
 export const DashboardLayout = () => {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { user } = useSupabaseAuth()
   const { profile } = useProfile()
   const currentDate = new Date();
@@ -51,8 +54,11 @@ export const DashboardLayout = () => {
               
               <div className="flex items-center gap-2">
                 <ThemeToggle />
-                <EventsCalendarDialogButton />
-                <Button variant="ghost" size="sm" className="btn-glass">
+                <Link to="/calendar" className="btn-glass rounded-md px-2 py-1 text-sm border inline-flex items-center gap-1">
+                  <CalendarIcon className="h-4 w-4" />
+                  Calendar
+                </Link>
+                <Button variant="ghost" size="sm" className="btn-glass" onClick={() => setSettingsOpen(true)}>
                   <Settings className="h-4 w-4" />
                 </Button>
 
@@ -123,6 +129,7 @@ export const DashboardLayout = () => {
           </div>
         </div>
       </main>
+  <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* Footer */}
       <footer className="border-t border-white/10 bg-white/5 backdrop-blur-lg mt-16">

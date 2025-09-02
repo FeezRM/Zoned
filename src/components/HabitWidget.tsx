@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, Circle, Flame, Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useSupabaseAuth from '@/lib/useSupabaseAuth'
-import { listHabits, insertHabit, updateHabitRow, deleteHabitRow, toggleHabitForToday, reorderHabits } from '@/lib/data'
+import { listHabits, insertHabit, updateHabitRow, deleteHabitRow, toggleHabitForToday, reorderHabits, listHabitEntriesForDate, getAllHabitsStreak } from '@/lib/data'
+import { toast } from "@/components/ui/use-toast";
 
 interface Habit {
   id: string;
@@ -22,8 +23,31 @@ export const HabitWidget = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [editIcon, setEditIcon] = useState("✅")
-  const [pendingToggleId, setPendingToggleId] = useState<string | null>(null)
+  const [pendingToggleIds, setPendingToggleIds] = useState<Set<string>>(new Set())
   const [dragId, setDragId] = useState<string | null>(null)
+  const [allStreak, setAllStreak] = useState(0)
+  const allStreakReqId = useRef(0)
+  const allStreakTimer = useRef<number | null>(null)
+  const habitsRef = useRef<Habit[]>([])
+  useEffect(()=>{ habitsRef.current = habits }, [habits])
+
+  const refreshAllStreak = async () => {
+    const id = ++allStreakReqId.current
+    const s = await getAllHabitsStreak()
+    if (id !== allStreakReqId.current) return
+    const allDoneLocal = habitsRef.current.length>0 && habitsRef.current.every(h=>h.completed)
+    if (allDoneLocal && s === 0) {
+      // Floor at 1 if UI shows all done; schedule a follow-up reconcile to pick up server entry
+      setAllStreak(prev => Math.max(prev, 1))
+      window.setTimeout(async () => {
+        const sid = ++allStreakReqId.current
+        const s2 = await getAllHabitsStreak()
+        if (sid === allStreakReqId.current) setAllStreak(s2)
+      }, 1000)
+    } else {
+      setAllStreak(s)
+    }
+  }
 
   const EMOJI_CHOICES = [
     '✅','📚','🏃‍♂️','🚶‍♂️','💧','🧘‍♂️','🛏️','🍎','🧠','📝','🎧','☀️','🌙','💪','🧹','🧺','🧑‍🍳','🧑‍💻','📖','✍️'
@@ -31,21 +55,59 @@ export const HabitWidget = () => {
 
   useEffect(() => {
     if (!user) { setHabits([]); setLoading(false); return }
-    setLoading(true)
-    listHabits().then(({ data }) => {
-      if (data) setHabits(data.map((h) => ({ id: h.id, name: h.name, completed: h.completed, streak: h.streak, icon: h.icon })))
+    const load = async () => {
+      setLoading(true)
+      const { data } = await listHabits()
+      if (!data) { setHabits([]); setLoading(false); return }
+  // Derive today's completion from entries to avoid stale 'completed'
+      const today = new Date().toISOString().slice(0,10)
+      const { data: entries } = await listHabitEntriesForDate(today)
+      const done = new Set((entries ?? []).map(e => e.habit_id))
+  const nextHabits = data.map((h) => ({ id: h.id, name: h.name, completed: done.has(h.id) ? true : h.completed, streak: h.streak, icon: h.icon }))
+  setHabits(nextHabits)
+  // Compute all-habits streak locally for day 1 as a floor to avoid immediate flip to 0
+  const allDoneLocal = nextHabits.length>0 && nextHabits.every(h=>h.completed)
+  if (allDoneLocal) setAllStreak((prev)=> Math.max(prev, 1))
+  // Now reconcile with server value
+  await refreshAllStreak()
       setLoading(false)
-    })
+    }
+    load()
+    // Listen for rollover events to refresh
+    const onRollover = () => load()
+    window.addEventListener('habits:rollover', onRollover as any)
+    return () => {
+      window.removeEventListener('habits:rollover', onRollover as any)
+      if (allStreakTimer.current) { clearTimeout(allStreakTimer.current); allStreakTimer.current = null }
+    }
   }, [user])
 
   const toggleHabit = async (id: string) => {
-    if (pendingToggleId) return
-    setPendingToggleId(id)
+    if (pendingToggleIds.has(id)) return
+    setPendingToggleIds((s)=>new Set(s).add(id))
+  const prev = habits
+  // Optimistic: flip the UI immediately
+  setHabits((p)=> p.map(h=> h.id===id ? { ...h, completed: !h.completed } : h))
     try {
-      const { completed, streak } = await toggleHabitForToday(id)
+  const { completed, streak } = await toggleHabitForToday(id)
       setHabits((p) => p.map((h) => h.id === id ? { ...h, completed, streak } : h))
+      // Optimistic local all-habits streak: if after this toggle all are completed today, floor at 1 immediately
+      const after = (()=>{
+        const map = new Map(habits.map(x=>[x.id, x.completed]))
+        map.set(id, completed)
+        return habits.map(x=>({ ...x, completed: map.get(x.id)! }))
+      })()
+      if (after.length>0 && after.every(h=>h.completed)) setAllStreak((prev)=> Math.max(prev, 1))
+  // refresh all-habits streak after toggles (debounced to avoid races)
+      if (allStreakTimer.current) clearTimeout(allStreakTimer.current)
+      allStreakTimer.current = window.setTimeout(() => { refreshAllStreak() }, 250)
+    } catch (err: any) {
+      console.error('Habit toggle failed', err)
+      toast({ title: 'Could not update habit', description: err?.message || 'Please try again.', variant: 'destructive' as any })
+  // Revert optimistic update
+  setHabits(prev)
     } finally {
-      setPendingToggleId(null)
+      setPendingToggleIds((s)=>{ const n = new Set(s); n.delete(id); return n })
     }
   }
 
@@ -95,9 +157,9 @@ export const HabitWidget = () => {
           <button className="btn-glass text-xs px-2 py-1" onClick={() => setAdding((v) => !v)}>
             <Plus className="h-4 w-4" />
           </button>
-          <div className="flex items-center gap-1 text-[hsl(var(--accent-green))]">
+          <div className="flex items-center gap-1 text-[hsl(var(--accent-green))]" title="All-habits streak (days in a row all habits were completed)">
             <Flame className="h-5 w-5" />
-            <span className="text-sm font-medium">{Math.max(0, ...habits.map(h=>h.streak), 0)}</span>
+            <span className="text-sm font-medium">{allStreak}</span>
           </div>
         </div>
       </div>
@@ -188,7 +250,7 @@ export const HabitWidget = () => {
             <button
               className="btn-glass text-xs p-1 rounded-md shrink-0"
               onClick={(e)=>{e.preventDefault(); e.stopPropagation(); toggleHabit(habit.id)}}
-              disabled={pendingToggleId === habit.id}
+              disabled={pendingToggleIds.has(habit.id)}
               aria-label={habit.completed ? 'Uncheck habit' : 'Check habit'}
               title={habit.completed ? 'Uncheck' : 'Check'}
             >

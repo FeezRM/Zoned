@@ -1,33 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, X, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, X, Edit2, ChevronLeft, ChevronRight, Settings as Gear } from "lucide-react";
 import { addDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  insertEvent, 
-  deleteEvent, 
-  updateEvent, 
-  listEventsInRange 
-} from "@/lib/events";
+import { insertEvent, deleteEvent, updateEvent, listEventsInRange } from "@/lib/events";
 import type { DbEvent } from "@/types/data";
 import { refreshReminders } from "@/lib/reminders";
 import { ensureGoogleAuth, isGoogleAuthed, isGoogleConfigured, listCalendars, getSelectedCalendarId, setSelectedCalendarId, signOutGoogle, gcalListEventsInRange, gcalInsertEvent, gcalUpdateEvent, gcalDeleteEvent } from "@/lib/googleCalendar";
-import { getSettings, subscribeSettings, type Settings } from "@/lib/settings";
+import { getSettings, saveSettings, subscribeSettings, type Settings } from "@/lib/settings";
 
 function toDateInputValue(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
-
 function toTimeInputValue(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
 function parseDateTime(dateStr: string, timeStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const [hh, mm] = timeStr.split(":").map(Number);
@@ -54,36 +46,17 @@ function useRangeEvents(start: Date, end: Date, reloadKey = 0) {
   return { events, setEvents };
 }
 
-export function EventsCalendarDialogButton() {
-  const [open, setOpen] = useState(false);
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="btn-glass" aria-label="Open calendar">
-          <CalendarIcon className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-6xl">
-        <DialogHeader>
-          <DialogTitle>Calendar</DialogTitle>
-        </DialogHeader>
-        <CalendarBody onClose={() => setOpen(false)} />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function CalendarBody({ onClose }: { onClose?: () => void }) {
-  const [selected, setSelected] = useState<Date>(new Date());
-  const [anchor, setAnchor] = useState<Date>(new Date()); // visible range anchor
+export default function CalendarPage() {
   const [settings, setSettings] = useState<Settings>(getSettings());
   useEffect(() => {
     const unsub = subscribeSettings((s) => setSettings(s));
     return () => unsub();
   }, []);
+
+  const [selected, setSelected] = useState<Date>(new Date());
+  const [anchor, setAnchor] = useState<Date>(new Date());
   const [view, setView] = useState<"month" | "week" | "day">(settings.calendar.defaultView);
   useEffect(() => { setView(settings.calendar.defaultView); }, [settings.calendar.defaultView]);
-  const [reloadKey, setReloadKey] = useState(0);
 
   const rangeStart = useMemo(() => {
     if (view === "day") return startOfDay(anchor);
@@ -96,6 +69,7 @@ function CalendarBody({ onClose }: { onClose?: () => void }) {
     return endOfMonth(anchor);
   }, [anchor, view, settings.calendar.weekStart]);
 
+  const [reloadKey, setReloadKey] = useState(0);
   const { events, setEvents } = useRangeEvents(rangeStart, rangeEnd, reloadKey);
 
   // Quick create draft from grid clicks
@@ -116,12 +90,12 @@ function CalendarBody({ onClose }: { onClose?: () => void }) {
       data = res.data;
     } else {
       const res = await insertEvent({
-      title: payload.title,
-      description: payload.description,
-      start_iso: payload.start.toISOString(),
-      end_iso: payload.end.toISOString(),
-      all_day: payload.allDay,
-      reminder_minutes: payload.reminder,
+        title: payload.title,
+        description: payload.description,
+        start_iso: payload.start.toISOString(),
+        end_iso: payload.end.toISOString(),
+        all_day: payload.allDay,
+        reminder_minutes: payload.reminder,
       });
       data = res.data;
     }
@@ -175,85 +149,120 @@ function CalendarBody({ onClose }: { onClose?: () => void }) {
     else setAnchor(addDays(endOfMonth(anchor), 1));
   };
 
+  // page layout
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Selected date</p>
-            <p className="text-base font-medium">{format(selected, "EEEE, MMMM d, yyyy")}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setSelected(new Date()); setAnchor(new Date()); }}>Today</Button>
-            {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-lg border p-2">
-          <Calendar mode="single" selected={selected} onSelect={(d) => { if (d) { setSelected(d); setAnchor(d); } }} />
-        </div>
-
-        <div className="rounded-lg border p-4">
-          <h3 className="text-sm font-semibold mb-3">Create Event</h3>
-          <CreateEventForm defaultDate={selected} onCreate={onCreated} presetStart={draftStart ?? undefined} presetEnd={draftEnd ?? undefined} onClearPreset={() => { setDraftStart(null); setDraftEnd(null); }} settings={settings} />
+    <div className="max-w-7xl mx-auto px-6 py-6">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5" />
+          <h1 className="text-xl font-semibold">Calendar</h1>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous"><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" onClick={goNext} aria-label="Next"><ChevronRight className="h-4 w-4" /></Button>
-            <div className="ml-2 text-sm text-muted-foreground flex items-center gap-1">
-              <Clock className="h-4 w-4" /> {format(rangeStart, view === "month" ? "MMMM yyyy" : "MMM d")} {view !== "month" ? `– ${format(rangeEnd, "MMM d")}` : ""}
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+        {/* Left sidebar */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Selected date</p>
+              <p className="text-base font-medium">{format(selected, "EEEE, MMMM d, yyyy")}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setSelected(new Date()); setAnchor(new Date()); }}>Today</Button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <GoogleConnect onChanged={() => setReloadKey((k) => k + 1)} />
-            <Tabs value={view} onValueChange={(v) => setView(v as any)}>
-            <TabsList>
-              <TabsTrigger value="day">Day</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-            </TabsList>
-            </Tabs>
+
+          <div className="rounded-lg border p-2">
+            <Calendar mode="single" selected={selected} onSelect={(d) => { if (d) { setSelected(d); setAnchor(d); } }} />
+          </div>
+
+          {/* Compact Calendar Settings on page */}
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Gear className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold">Calendar settings</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs text-muted-foreground col-span-1">Week starts on
+                <select className="mt-1 w-full border rounded-md px-2 py-1 bg-background" value={settings.calendar.weekStart}
+                  onChange={(e) => saveSettings({ calendar: { ...settings.calendar, weekStart: Number(e.target.value) as any } })}>
+                  <option value={0}>Sunday</option>
+                  <option value={1}>Monday</option>
+                </select>
+              </label>
+              <label className="text-xs text-muted-foreground col-span-1">Time slot minutes
+                <select className="mt-1 w-full border rounded-md px-2 py-1 bg-background" value={settings.calendar.timeSlotMinutes}
+                  onChange={(e) => saveSettings({ calendar: { ...settings.calendar, timeSlotMinutes: Number(e.target.value) as any } })}>
+                  <option value={15}>15</option>
+                  <option value={30}>30</option>
+                  <option value={60}>60</option>
+                </select>
+              </label>
+              <label className="text-xs text-muted-foreground col-span-1">Default event length
+                <select className="mt-1 w-full border rounded-md px-2 py-1 bg-background" value={settings.calendar.defaultEventLengthMin}
+                  onChange={(e) => saveSettings({ calendar: { ...settings.calendar, defaultEventLengthMin: Number(e.target.value) as any } })}>
+                  <option value={30}>30 min</option>
+                  <option value={45}>45 min</option>
+                  <option value={60}>60 min</option>
+                  <option value={90}>90 min</option>
+                </select>
+              </label>
+              <label className="text-xs text-muted-foreground col-span-1">Show current time line
+                <input className="mt-1 h-4 w-4 align-middle ml-2" type="checkbox" checked={settings.calendar.showCurrentTimeLine}
+                  onChange={(e) => saveSettings({ calendar: { ...settings.calendar, showCurrentTimeLine: e.target.checked } })} />
+              </label>
+              <div className="col-span-2 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground w-32">Working hours</span>
+                <Input className="w-24" type="number" min={0} max={23} value={settings.calendar.workingHours.startHour}
+                  onChange={(e) => saveSettings({ calendar: { ...settings.calendar, workingHours: { ...settings.calendar.workingHours, startHour: Number(e.target.value) } } })} />
+                <span className="text-xs">to</span>
+                <Input className="w-24" type="number" min={1} max={24} value={settings.calendar.workingHours.endHour}
+                  onChange={(e) => saveSettings({ calendar: { ...settings.calendar, workingHours: { ...settings.calendar.workingHours, endHour: Number(e.target.value) } } })} />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <h3 className="text-sm font-semibold mb-3">Create Event</h3>
+            <CreateEventForm defaultDate={selected} onCreate={onCreated} presetStart={draftStart ?? undefined} presetEnd={draftEnd ?? undefined} onClearPreset={() => { setDraftStart(null); setDraftEnd(null); }} settings={settings} />
           </div>
         </div>
 
-        <Tabs value={view}>
-          <TabsContent value="day">
-            <TimeGrid
-              days={[anchor]}
-              events={events}
-              settings={settings}
-              onSlotClick={(d) => { setDraftStart(d); setDraftEnd(addDays(d, 0)); setSelected(d); }}
-              onUpdate={onUpdated}
-              onDelete={onDeleted}
-            />
-          </TabsContent>
-          <TabsContent value="week">
-            <TimeGrid
-              days={[...Array(7)].map((_, i) => addDays(rangeStart, i))}
-              events={events}
-              settings={settings}
-              onSlotClick={(d) => { setDraftStart(d); setDraftEnd(addDays(d, 0)); setSelected(d); }}
-              onUpdate={onUpdated}
-              onDelete={onDeleted}
-            />
-          </TabsContent>
-          <TabsContent value="month">
-            <MonthGrid
-              monthAnchor={anchor}
-              events={events}
-              onDayClick={(d) => { setSelected(d); setAnchor(d); }}
-              onCreateQuick={(start) => { setDraftStart(start); setDraftEnd(new Date(start.getTime() + 60 * 60 * 1000)); setSelected(start); }}
-              onUpdate={onUpdated}
-              onDelete={onDeleted}
-            />
-          </TabsContent>
-        </Tabs>
+        {/* Right content */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous"><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={goNext} aria-label="Next"><ChevronRight className="h-4 w-4" /></Button>
+              <div className="ml-2 text-sm text-muted-foreground flex items-center gap-1">
+                <Clock className="h-4 w-4" /> {format(rangeStart, view === "month" ? "MMMM yyyy" : "MMM d")} {view !== "month" ? `– ${format(rangeEnd, "MMM d")}` : ""}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <GoogleConnect onChanged={() => setReloadKey((k) => k + 1)} />
+              <Tabs value={view} onValueChange={(v) => { setView(v as any); saveSettings({ calendar: { ...settings.calendar, defaultView: v as any } }); }}>
+                <TabsList>
+                  <TabsTrigger value="day">Day</TabsTrigger>
+                  <TabsTrigger value="week">Week</TabsTrigger>
+                  <TabsTrigger value="month">Month</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </div>
+
+          <Tabs value={view}>
+            <TabsContent value="day">
+              <TimeGrid days={[anchor]} events={events} settings={settings} onSlotClick={(d) => { setDraftStart(d); setDraftEnd(addDays(d, 0)); setSelected(d); }} onUpdate={onUpdated} onDelete={onDeleted} />
+            </TabsContent>
+            <TabsContent value="week">
+              <TimeGrid days={[...Array(7)].map((_, i) => addDays(rangeStart, i))} events={events} settings={settings} onSlotClick={(d) => { setDraftStart(d); setDraftEnd(addDays(d, 0)); setSelected(d); }} onUpdate={onUpdated} onDelete={onDeleted} />
+            </TabsContent>
+            <TabsContent value="month">
+              <MonthGrid monthAnchor={anchor} events={events} onDayClick={(d) => { setSelected(d); setAnchor(d); }} onCreateQuick={(start) => { setDraftStart(start); setDraftEnd(new Date(start.getTime() + 60 * 60 * 1000)); setSelected(start); }} onUpdate={onUpdated} onDelete={onDeleted} />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
@@ -297,9 +306,9 @@ function CreateEventForm({ defaultDate, onCreate, presetStart, presetEnd, onClea
     const start = allDay ? startOfDay(new Date(date)) : parseDateTime(date, startTime);
     const end = allDay ? endOfDay(new Date(date)) : parseDateTime(date, endTime);
     if (!title.trim()) return;
-  onCreate({ title: title.trim(), description: desc.trim() || undefined, start, end, allDay, reminder: reminder === "none" ? null : Number(reminder) });
-  setTitle(""); setDesc(""); setAllDay(false); setStartTime("09:00"); setEndTime(addToTime("09:00", defaultLen)); setReminder(settings.reminders.defaultMinutes == null ? "none" : Number(settings.reminders.defaultMinutes));
-  onClearPreset?.();
+    onCreate({ title: title.trim(), description: desc.trim() || undefined, start, end, allDay, reminder: reminder === "none" ? null : Number(reminder) });
+    setTitle(""); setDesc(""); setAllDay(false); setStartTime("09:00"); setEndTime(addToTime("09:00", defaultLen)); setReminder(settings.reminders.defaultMinutes == null ? "none" : Number(settings.reminders.defaultMinutes));
+    onClearPreset?.();
   };
 
   return (
@@ -345,30 +354,24 @@ function CreateEventForm({ defaultDate, onCreate, presetStart, presetEnd, onClea
   );
 }
 
-// ===== Google Calendar-like Time Grid =====
+// ===== Time Grid and Month Grid (copied and adapted) =====
 
-const HOUR_BASE_HEIGHT = 48; // px per hour
-function getMinutePx(slot: 15 | 30 | 60) {
-  // keep hour visual size consistent, but granular clicks are aligned to slot minutes
-  return HOUR_BASE_HEIGHT / 60;
-}
+const HOUR_BASE_HEIGHT = 48;
+function getMinutePx() { return HOUR_BASE_HEIGHT / 60; }
 
 function layoutDay(events: DbEvent[], day: Date, minutePx: number) {
   const start = startOfDay(day).getTime();
   const end = endOfDay(day).getTime();
-  // Filter timed events in this day
   const dayEvents = events
     .filter((e) => !e.all_day && new Date(e.end_iso).getTime() > start && new Date(e.start_iso).getTime() < end)
     .map((e) => {
       const s = Math.max(new Date(e.start_iso).getTime(), start);
       const ee = Math.min(new Date(e.end_iso).getTime(), end);
-  const top = (s - start) / 60000 * minutePx;
-  const height = Math.max(20, (ee - s) / 60000 * minutePx);
+      const top = (s - start) / 60000 * minutePx;
+      const height = Math.max(20, (ee - s) / 60000 * minutePx);
       return { e, s, ee, top, height };
     })
     .sort((a, b) => a.s - b.s || a.ee - b.ee);
-
-  // Overlap grouping and column assignment
   type L = { e: DbEvent; s: number; ee: number; top: number; height: number; col: number; cols: number };
   const laid: L[] = [];
   let active: L[] = [];
@@ -377,30 +380,19 @@ function layoutDay(events: DbEvent[], day: Date, minutePx: number) {
     const used = new Set(active.map((x) => x.col));
     let col = 0;
     while (used.has(col)) col++;
-    const node: L = { ...item, col, cols: 1 } as L;
-    active.push(node);
-    laid.push(node);
-    // update cols for all overlapping in active
+    const node: L = { ...(item as any), col, cols: 1 } as L;
+    active.push(node); laid.push(node);
     const maxCol = Math.max(...active.map((x) => x.col));
     active.forEach((x) => (x.cols = Math.max(x.cols, maxCol + 1)));
   }
-  return laid.map((x) => ({
-    event: x.e,
-    top: x.top,
-    height: x.height,
-    leftPct: (x.col / x.cols) * 100,
-    widthPct: (1 / x.cols) * 100 - 1, // small gap
-  }));
+  return laid.map((x) => ({ event: x.e, top: x.top, height: x.height, leftPct: (x.col / x.cols) * 100, widthPct: (1 / x.cols) * 100 - 1 }));
 }
 
 function TimeGrid({ days, events, settings, onSlotClick, onUpdate, onDelete }: { days: Date[]; events: DbEvent[]; settings: Settings; onSlotClick: (start: Date) => void; onUpdate: (id: string, patch: any) => void; onDelete: (id: string) => void }) {
   const hours = [...Array(24)].map((_, h) => h);
-  const MINUTE_PX = getMinutePx(settings.calendar.timeSlotMinutes);
+  const MINUTE_PX = getMinutePx();
   const allDayByDay = useMemo(() => {
-    return days.map((d) => ({
-      day: d,
-      events: events.filter((e) => e.all_day && isSameDay(new Date(e.start_iso), d)),
-    }));
+    return days.map((d) => ({ day: d, events: events.filter((e) => e.all_day && isSameDay(new Date(e.start_iso), d)) }));
   }, [days.map((d) => d.toDateString()).join("|"), events.map((e) => e.id + e.start_iso + e.end_iso).join("|")]);
 
   const laidByDay = useMemo(() => {
@@ -410,25 +402,22 @@ function TimeGrid({ days, events, settings, onSlotClick, onUpdate, onDelete }: {
   const handleSlot = (day: Date, hour: number, yWithin?: number) => {
     const start = new Date(day);
     const minutes = yWithin ? Math.round(yWithin / MINUTE_PX) : 0;
-    // snap to configured granularity
     const snap = settings.calendar.timeSlotMinutes;
     const snapped = Math.round(minutes / snap) * snap;
     start.setHours(hour, snapped, 0, 0);
     onSlotClick(start);
   };
 
-  // current time indicator positions per day
   const now = new Date();
   const nowByDay = days.map((d) => {
     if (!isSameDay(d, now)) return null;
     const start = startOfDay(d).getTime();
     const minutes = Math.max(0, Math.min(24 * 60, Math.floor((now.getTime() - start) / 60000)));
-    return minutes * MINUTE_PX; // px from top
+    return minutes * MINUTE_PX;
   });
 
   return (
-  <div className="rounded-lg border overflow-auto" style={{ height: "70vh" }}>
-      {/* Header row with day names */}
+    <div className="rounded-lg border overflow-auto" style={{ height: "70vh" }}>
       <div className="grid" style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(0, 1fr))` }}>
         <div className="border-b p-2 text-xs text-muted-foreground" />
         {days.map((d) => (
@@ -437,24 +426,17 @@ function TimeGrid({ days, events, settings, onSlotClick, onUpdate, onDelete }: {
           </div>
         ))}
       </div>
-
-      {/* All-day row */}
       <div className="grid" style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(0, 1fr))` }}>
         <div className="border-b p-2 text-xs text-muted-foreground">All-day</div>
         {allDayByDay.map(({ day, events }) => (
           <div key={day.toDateString()} className="border-b p-2 min-h-[40px]">
             <div className="flex flex-wrap gap-1">
-              {events.map((e) => (
-                <EventChip key={e.id} e={e} onUpdate={onUpdate} onDelete={onDelete} />
-              ))}
+              {events.map((e) => (<EventChip key={e.id} e={e} onUpdate={onUpdate} onDelete={onDelete} />))}
             </div>
           </div>
         ))}
       </div>
-
-      {/* Time grid */}
       <div className="grid" style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(0, 1fr))` }}>
-        {/* Time gutter */}
         <div className="relative">
           {hours.map((h) => (
             <div key={h} className="h-12 border-b border-border/50 text-[10px] text-muted-foreground pr-1 flex items-start justify-end">
@@ -462,29 +444,18 @@ function TimeGrid({ days, events, settings, onSlotClick, onUpdate, onDelete }: {
             </div>
           ))}
         </div>
-
-        {/* Day columns */}
         {days.map((d, idx) => (
           <div key={idx} className="relative border-l">
-            {/* hour lines */}
             <div className="absolute inset-0">
-              {hours.map((h) => (
-                <div key={h} className="h-12 border-b border-border/50" />
-              ))}
+              {hours.map((h) => (<div key={h} className="h-12 border-b border-border/50" />))}
               {settings.calendar.showCurrentTimeLine && nowByDay[idx] != null && (
-                <div
-                  className="absolute left-0 right-0 h-px bg-red-500"
-                  style={{ top: nowByDay[idx]! }}
-                />
+                <div className="absolute left-0 right-0 h-px bg-red-500" style={{ top: nowByDay[idx]! }} />
               )}
             </div>
-            {/* click surface */}
-            <div
-              className="relative"
-              style={{ height: `${24 * HOUR_BASE_HEIGHT}px` }}
+            <div className="relative" style={{ height: `${24 * HOUR_BASE_HEIGHT}px` }}
               onDoubleClick={(e) => {
                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                const y = e.clientY - rect.top; // px from top
+                const y = e.clientY - rect.top;
                 const minutesFromTop = y / MINUTE_PX;
                 const hour = Math.floor(minutesFromTop / 60);
                 handleSlot(d, hour, minutesFromTop - hour * 60);
@@ -517,23 +488,15 @@ function EventBlock({ pos, onUpdate, onDelete }: { pos: { event: DbEvent; top: n
   const [editing, setEditing] = useState(false);
   const { event } = pos;
   return (
-    <div
-      className="absolute rounded-md bg-primary/20 border border-primary/30 p-1 text-xs overflow-hidden cursor-pointer hover:bg-primary/30"
-      style={{ top: pos.top, height: pos.height, left: `${pos.leftPct}%`, width: `${pos.widthPct}%` }}
-      onClick={() => setEditing(true)}
-    >
+    <div className="absolute rounded-md bg-primary/20 border border-primary/30 p-1 text-xs overflow-hidden cursor-pointer hover:bg-primary/30" style={{ top: pos.top, height: pos.height, left: `${pos.leftPct}%`, width: `${pos.widthPct}%` }} onClick={() => setEditing(true)}>
       <div className="font-medium truncate">{event.title}</div>
-      {!event.all_day && (
-        <div className="text-[10px] text-muted-foreground truncate">{format(new Date(event.start_iso), "p")} – {format(new Date(event.end_iso), "p")}</div>
-      )}
+      {!event.all_day && (<div className="text-[10px] text-muted-foreground truncate">{format(new Date(event.start_iso), "p")} – {format(new Date(event.end_iso), "p")}</div>)}
       {editing && (
         <EditEventDialog event={event} onClose={() => setEditing(false)} onSave={(patch) => onUpdate(event.id, patch)} onDelete={() => onDelete(event.id)} />
       )}
     </div>
   );
 }
-
-// ===== Month grid =====
 
 function MonthGrid({ monthAnchor, events, onDayClick, onCreateQuick, onUpdate, onDelete }: { monthAnchor: Date; events: DbEvent[]; onDayClick: (d: Date) => void; onCreateQuick: (start: Date) => void; onUpdate: (id: string, patch: any) => void; onDelete: (id: string) => void }) {
   const start = startOfWeek(startOfMonth(monthAnchor), { weekStartsOn: 0 });
@@ -543,13 +506,11 @@ function MonthGrid({ monthAnchor, events, onDayClick, onCreateQuick, onUpdate, o
   const weeks = Math.ceil(days.length / 7);
   return (
     <div className="rounded-lg border overflow-auto" style={{ height: "70vh" }}>
-      {/* day headers */}
       <div className="grid" style={{ gridTemplateColumns: `repeat(7, minmax(0, 1fr))` }}>
         {[...Array(7)].map((_, i) => (
           <div key={i} className="border-b p-2 text-xs text-muted-foreground">{format(addDays(start, i), "EEE")}</div>
         ))}
       </div>
-      {/* grid */}
       <div className="grid" style={{ gridTemplateColumns: `repeat(7, minmax(0, 1fr))`, gridTemplateRows: `repeat(${weeks}, minmax(120px, auto))` }}>
         {days.map((d) => {
           const dayEvents = events.filter((e) => isSameDay(new Date(e.start_iso), d));
@@ -561,9 +522,7 @@ function MonthGrid({ monthAnchor, events, onDayClick, onCreateQuick, onUpdate, o
                 <button className={`text-xs ${isToday(d) ? 'text-primary font-semibold' : 'text-muted-foreground'}`} onClick={() => onDayClick(d)}>{format(d, "d")}</button>
               </div>
               <div className="space-y-1">
-                {shown.map((e) => (
-                  <EventChip key={e.id} e={e} onUpdate={onUpdate} onDelete={onDelete} />
-                ))}
+                {shown.map((e) => (<EventChip key={e.id} e={e} onUpdate={onUpdate} onDelete={onDelete} />))}
                 {extra > 0 && <div className="text-[11px] text-muted-foreground">+{extra} more</div>}
               </div>
             </div>
@@ -571,111 +530,6 @@ function MonthGrid({ monthAnchor, events, onDayClick, onCreateQuick, onUpdate, o
         })}
       </div>
     </div>
-  );
-}
-
-function EventRow({ event, onUpdate, onDelete, compact }: { event: DbEvent; onUpdate: (id: string, patch: any) => void; onDelete: (id: string) => void; compact?: boolean }) {
-  const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(event.title);
-  const [desc, setDesc] = useState(event.description);
-  const [allDay, setAllDay] = useState(event.all_day);
-  const s = new Date(event.start_iso);
-  const e = new Date(event.end_iso);
-  const [date, setDate] = useState(toDateInputValue(s));
-  const [startTime, setStartTime] = useState(toTimeInputValue(s));
-  const [endTime, setEndTime] = useState(toTimeInputValue(e));
-  const [reminder, setReminder] = useState<string>(event.reminder_minutes == null ? "none" : String(event.reminder_minutes));
-
-  const save = () => {
-    const start = allDay ? startOfDay(new Date(date)) : parseDateTime(date, startTime);
-    const end = allDay ? endOfDay(new Date(date)) : parseDateTime(date, endTime);
-    onUpdate(event.id, {
-      title: title.trim(),
-      description: desc.trim(),
-      start,
-      end,
-      allDay,
-      reminder: reminder === "none" ? null : Number(reminder),
-    });
-    setEditing(false);
-  };
-
-  if (compact && !editing) {
-    return (
-      <li className="p-2 rounded-md border bg-accent/30 flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm truncate">{event.title}</p>
-          {!event.all_day && (
-            <p className="text-[11px] text-muted-foreground">{format(new Date(event.start_iso), "p")} – {format(new Date(event.end_iso), "p")}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" onClick={() => setEditing(true)} aria-label="Edit"><Edit2 className="h-4 w-4" /></Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(event.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
-        </div>
-      </li>
-    );
-  }
-
-  return (
-    <li className="p-2 rounded-md border bg-accent/30">
-      {!editing ? (
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{event.title}</p>
-            <p className="text-xs text-muted-foreground truncate">{event.description}</p>
-            <div className="text-[11px] text-muted-foreground">
-              {event.all_day ? "All-day" : `${format(new Date(event.start_iso), "PP p")} – ${format(new Date(event.end_iso), "p")}`}
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" onClick={() => setEditing(true)} aria-label="Edit"><Edit2 className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" onClick={() => onDelete(event.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Textarea placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-xs text-muted-foreground">Date</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="flex-1 flex items-end gap-2">
-              <div className="flex-1">
-                <label className="text-xs text-muted-foreground">Start</label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={allDay} />
-              </div>
-              <div className="flex-1">
-                <label className="text-xs text-muted-foreground">End</label>
-                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={allDay} />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm inline-flex items-center gap-2"><input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} /> All-day</label>
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Reminder</span>
-              <select className="text-sm border rounded-md px-2 py-1 bg-background" value={String(reminder)} onChange={(e) => setReminder(e.target.value)}>
-                <option value="none">None</option>
-                <option value="5">5 min</option>
-                <option value="10">10 min</option>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="60">1 hr</option>
-                <option value="120">2 hr</option>
-                <option value="1440">1 day</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={save}>Save</Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}><X className="h-4 w-4 mr-1" />Cancel</Button>
-          </div>
-        </div>
-      )}
-    </li>
   );
 }
 
@@ -750,8 +604,6 @@ function EditEventDialog({ event, onClose, onSave, onDelete }: { event: DbEvent;
   );
 }
 
-export default EventsCalendarDialogButton;
-
 // --- Google connect small control
 function GoogleConnect({ onChanged }: { onChanged?: () => void }) {
   const configured = isGoogleConfigured();
@@ -819,9 +671,7 @@ function GoogleConnect({ onChanged }: { onChanged?: () => void }) {
   return (
     <div className="flex items-center gap-2">
       <select className="text-sm border rounded-md px-2 py-1 bg-background" value={selectedId ?? ""} onChange={(e) => onSelect(e.target.value)}>
-        {calendars.map((c) => (
-          <option key={c.id} value={c.id}>{c.summary}</option>
-        ))}
+        {calendars.map((c) => (<option key={c.id} value={c.id}>{c.summary}</option>))}
       </select>
       <Button size="sm" variant="ghost" onClick={disconnect}>Sign out</Button>
     </div>
