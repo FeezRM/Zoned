@@ -69,3 +69,17 @@ export interface DbMoodEntry {
   emoji: string
   created_at: string
 }
+
+// Calendar Events (MVP: single calendar, no recurrence)
+export interface DbEvent {
+  id: string
+  user_id: string
+  title: string
+  description: string
+  start_iso: string // ISO datetime
+  end_iso: string   // ISO datetime
+  all_day: boolean
+  reminder_minutes: number | null // minutes before start to notify
+  created_at: string
+  updated_at?: string
+}

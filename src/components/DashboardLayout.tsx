@@ -4,12 +4,13 @@ import { FocusWidget } from "@/components/FocusWidget";
 import { HabitWidget } from "@/components/HabitWidget";
 import { MoodWidget } from "@/components/MoodWidget";
 import { NotesWidget } from "@/components/NotesWidget";
-import { Calendar, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import HeaderAuth from "@/components/HeaderAuth";
 import useSupabaseAuth from "@/lib/useSupabaseAuth";
 import useProfile from "@/lib/useProfile";
+import EventsCalendarDialogButton from "@/components/EventsCalendarDialog";
 
 export const DashboardLayout = () => {
   const { user } = useSupabaseAuth()
@@ -50,9 +51,7 @@ export const DashboardLayout = () => {
               
               <div className="flex items-center gap-2">
                 <ThemeToggle />
-                <Button variant="ghost" size="sm" className="btn-glass">
-                  <Calendar className="h-4 w-4" />
-                </Button>
+                <EventsCalendarDialogButton />
                 <Button variant="ghost" size="sm" className="btn-glass">
                   <Settings className="h-4 w-4" />
                 </Button>
