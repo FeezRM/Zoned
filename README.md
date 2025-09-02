@@ -1,6 +1,6 @@
 <div align="center">
 
-# The Daily Hub
+# Zoned
 
 Your joyful productivity OS — a place to gamify the day, romanticize the small wins, and make consistency feel good.
 
