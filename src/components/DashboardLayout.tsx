@@ -11,7 +11,7 @@ import HeaderAuth from "@/components/HeaderAuth";
 import useSupabaseAuth from "@/lib/useSupabaseAuth";
 import useProfile from "@/lib/useProfile";
 import { Link } from "react-router-dom";
-import SettingsDialog from "@/components/SettingsDialog";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import { useState } from "react";
 
 export const DashboardLayout = () => {
@@ -129,7 +129,9 @@ export const DashboardLayout = () => {
           </div>
         </div>
       </main>
-  <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* Settings Dialog */}
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* Footer with Liquid Glass */}
       <footer className="footer-liquid mt-16">

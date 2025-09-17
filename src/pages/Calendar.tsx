@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, X, Edit2, ChevronLeft, ChevronRight, Settings as Gear } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, X, Edit2, ChevronLeft, ChevronRight, Settings as Gear, ArrowLeft } from "lucide-react";
 import { addDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import type { DbEvent } from "@/types/data";
 import { refreshReminders } from "@/lib/reminders";
 import { ensureGoogleAuth, isGoogleAuthed, isGoogleConfigured, listCalendars, getSelectedCalendarId, setSelectedCalendarId, signOutGoogle, gcalListEventsInRange, gcalInsertEvent, gcalUpdateEvent, gcalDeleteEvent } from "@/lib/googleCalendar";
 import { getSettings, saveSettings, subscribeSettings, type Settings } from "@/lib/settings";
+import { Link } from "react-router-dom";
 
 function toDateInputValue(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -154,7 +155,14 @@ export default function CalendarPage() {
     <div className="max-w-7xl mx-auto px-6 py-6">
       {/* Page header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <Link 
+            to="/" 
+            className="liquid-surface liquid-border rounded-lg p-2 hover:bg-accent/50 transition-colors backdrop-blur-sm"
+            aria-label="Back to Dashboard"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
           <CalendarIcon className="h-5 w-5" />
           <h1 className="text-xl font-semibold">Calendar</h1>
         </div>
@@ -163,44 +171,46 @@ export default function CalendarPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         {/* Left sidebar */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Selected date</p>
-              <p className="text-base font-medium">{format(selected, "EEEE, MMMM d, yyyy")}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setSelected(new Date()); setAnchor(new Date()); }}>Today</Button>
+          <div className="liquid-surface liquid-border rounded-xl p-6 backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Selected date</p>
+                <p className="text-base font-medium">{format(selected, "EEEE, MMMM d, yyyy")}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setSelected(new Date()); setAnchor(new Date()); }}>Today</Button>
+              </div>
             </div>
           </div>
 
-          <div className="rounded-lg border p-2">
+          <div className="liquid-surface liquid-border rounded-xl p-2 backdrop-blur-xl">
             <Calendar mode="single" selected={selected} onSelect={(d) => { if (d) { setSelected(d); setAnchor(d); } }} />
           </div>
 
           {/* Compact Calendar Settings on page */}
-          <div className="rounded-lg border p-4 space-y-3">
+          <div className="liquid-surface liquid-border rounded-xl p-6 space-y-4 backdrop-blur-xl liquid-highlight">
             <div className="flex items-center gap-2">
               <Gear className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">Calendar settings</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="text-xs text-muted-foreground col-span-1">Week starts on
-                <select className="mt-1 w-full border rounded-md px-2 py-1 bg-background" value={settings.calendar.weekStart}
+            <div className="grid grid-cols-2 gap-4">
+              <label className="text-xs text-muted-foreground col-span-1 space-y-2">Week starts on
+                <select className="mt-1 w-full liquid-surface border rounded-lg px-3 py-2 bg-background backdrop-blur-sm" value={settings.calendar.weekStart}
                   onChange={(e) => saveSettings({ calendar: { ...settings.calendar, weekStart: Number(e.target.value) as any } })}>
                   <option value={0}>Sunday</option>
                   <option value={1}>Monday</option>
                 </select>
               </label>
-              <label className="text-xs text-muted-foreground col-span-1">Time slot minutes
-                <select className="mt-1 w-full border rounded-md px-2 py-1 bg-background" value={settings.calendar.timeSlotMinutes}
+              <label className="text-xs text-muted-foreground col-span-1 space-y-2">Time slot minutes
+                <select className="mt-1 w-full liquid-surface border rounded-lg px-3 py-2 bg-background backdrop-blur-sm" value={settings.calendar.timeSlotMinutes}
                   onChange={(e) => saveSettings({ calendar: { ...settings.calendar, timeSlotMinutes: Number(e.target.value) as any } })}>
                   <option value={15}>15</option>
                   <option value={30}>30</option>
                   <option value={60}>60</option>
                 </select>
               </label>
-              <label className="text-xs text-muted-foreground col-span-1">Default event length
-                <select className="mt-1 w-full border rounded-md px-2 py-1 bg-background" value={settings.calendar.defaultEventLengthMin}
+              <label className="text-xs text-muted-foreground col-span-1 space-y-2">Default event length
+                <select className="mt-1 w-full liquid-surface border rounded-lg px-3 py-2 bg-background backdrop-blur-sm" value={settings.calendar.defaultEventLengthMin}
                   onChange={(e) => saveSettings({ calendar: { ...settings.calendar, defaultEventLengthMin: Number(e.target.value) as any } })}>
                   <option value={30}>30 min</option>
                   <option value={45}>45 min</option>
@@ -208,23 +218,23 @@ export default function CalendarPage() {
                   <option value={90}>90 min</option>
                 </select>
               </label>
-              <label className="text-xs text-muted-foreground col-span-1">Show current time line
-                <input className="mt-1 h-4 w-4 align-middle ml-2" type="checkbox" checked={settings.calendar.showCurrentTimeLine}
+              <label className="text-xs text-muted-foreground col-span-1 flex items-center gap-3">Show current time line
+                <input className="h-4 w-4 accent-primary" type="checkbox" checked={settings.calendar.showCurrentTimeLine}
                   onChange={(e) => saveSettings({ calendar: { ...settings.calendar, showCurrentTimeLine: e.target.checked } })} />
               </label>
-              <div className="col-span-2 flex items-center gap-2">
+              <div className="col-span-2 flex items-center gap-3">
                 <span className="text-xs text-muted-foreground w-32">Working hours</span>
-                <Input className="w-24" type="number" min={0} max={23} value={settings.calendar.workingHours.startHour}
+                <Input className="w-24 liquid-surface border rounded-lg px-3 py-2" type="number" min={0} max={23} value={settings.calendar.workingHours.startHour}
                   onChange={(e) => saveSettings({ calendar: { ...settings.calendar, workingHours: { ...settings.calendar.workingHours, startHour: Number(e.target.value) } } })} />
                 <span className="text-xs">to</span>
-                <Input className="w-24" type="number" min={1} max={24} value={settings.calendar.workingHours.endHour}
+                <Input className="w-24 liquid-surface border rounded-lg px-3 py-2" type="number" min={1} max={24} value={settings.calendar.workingHours.endHour}
                   onChange={(e) => saveSettings({ calendar: { ...settings.calendar, workingHours: { ...settings.calendar.workingHours, endHour: Number(e.target.value) } } })} />
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border p-4">
-            <h3 className="text-sm font-semibold mb-3">Create Event</h3>
+          <div className="liquid-surface liquid-border rounded-xl p-6 backdrop-blur-xl">
+            <h3 className="text-sm font-semibold mb-4">Create Event</h3>
             <CreateEventForm defaultDate={selected} onCreate={onCreated} presetStart={draftStart ?? undefined} presetEnd={draftEnd ?? undefined} onClearPreset={() => { setDraftStart(null); setDraftEnd(null); }} settings={settings} />
           </div>
         </div>
@@ -312,30 +322,33 @@ function CreateEventForm({ defaultDate, onCreate, presetStart, presetEnd, onClea
   };
 
   return (
-    <div className="space-y-2">
-      <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <Textarea placeholder="Description (optional)" value={desc} onChange={(e) => setDesc(e.target.value)} />
-      <div className="flex gap-2">
+    <div className="space-y-4">
+      <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className="liquid-surface border rounded-lg" />
+      <Textarea placeholder="Description (optional)" value={desc} onChange={(e) => setDesc(e.target.value)} className="liquid-surface border rounded-lg" />
+      <div className="flex gap-3">
         <div className="flex-1">
-          <label className="text-xs text-muted-foreground">Date</label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <label className="text-xs text-muted-foreground block mb-2">Date</label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="liquid-surface border rounded-lg" />
         </div>
         <div className="flex-1 flex items-end gap-2">
           <div className="flex-1">
-            <label className="text-xs text-muted-foreground">Start</label>
-            <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={allDay} />
+            <label className="text-xs text-muted-foreground block mb-2">Start</label>
+            <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={allDay} className="liquid-surface border rounded-lg" />
           </div>
           <div className="flex-1">
-            <label className="text-xs text-muted-foreground">End</label>
-            <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={allDay} />
+            <label className="text-xs text-muted-foreground block mb-2">End</label>
+            <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={allDay} className="liquid-surface border rounded-lg" />
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm inline-flex items-center gap-2"><input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} /> All-day</label>
-        <div className="ml-auto flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm inline-flex items-center gap-3">
+          <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="h-4 w-4 accent-primary" /> 
+          All-day
+        </label>
+        <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">Reminder</span>
-          <select className="text-sm border rounded-md px-2 py-1 bg-background" value={String(reminder)} onChange={(e) => setReminder(e.target.value as any)}>
+          <select className="text-sm liquid-surface border rounded-lg px-3 py-2 bg-background backdrop-blur-sm" value={String(reminder)} onChange={(e) => setReminder(e.target.value as any)}>
             <option value="none">None</option>
             <option value="5">5 min</option>
             <option value="10">10 min</option>
@@ -347,8 +360,10 @@ function CreateEventForm({ defaultDate, onCreate, presetStart, presetEnd, onClea
           </select>
         </div>
       </div>
-      <div className="pt-2">
-        <Button size="sm" onClick={submit}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+      <div className="pt-3">
+        <Button size="sm" onClick={submit} className="liquid-surface liquid-border backdrop-blur-sm">
+          <Plus className="h-4 w-4 mr-2" /> Add Event
+        </Button>
       </div>
     </div>
   );
@@ -417,7 +432,7 @@ function TimeGrid({ days, events, settings, onSlotClick, onUpdate, onDelete }: {
   });
 
   return (
-    <div className="rounded-lg border overflow-auto" style={{ height: "70vh" }}>
+    <div className="liquid-surface liquid-border rounded-xl overflow-auto backdrop-blur-xl" style={{ height: "70vh" }}>
       <div className="grid" style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(0, 1fr))` }}>
         <div className="border-b p-2 text-xs text-muted-foreground" />
         {days.map((d) => (
@@ -505,7 +520,7 @@ function MonthGrid({ monthAnchor, events, onDayClick, onCreateQuick, onUpdate, o
   for (let d = start; d <= end; d = addDays(d, 1)) days.push(new Date(d));
   const weeks = Math.ceil(days.length / 7);
   return (
-    <div className="rounded-lg border overflow-auto" style={{ height: "70vh" }}>
+    <div className="liquid-surface liquid-border rounded-xl overflow-auto backdrop-blur-xl" style={{ height: "70vh" }}>
       <div className="grid" style={{ gridTemplateColumns: `repeat(7, minmax(0, 1fr))` }}>
         {[...Array(7)].map((_, i) => (
           <div key={i} className="border-b p-2 text-xs text-muted-foreground">{format(addDays(start, i), "EEE")}</div>
@@ -553,36 +568,41 @@ function EditEventDialog({ event, onClose, onSave, onDelete }: { event: DbEvent;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-background border rounded-md p-4 w-[360px] shadow-lg">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold">Edit Event</h4>
-          <button className="text-muted-foreground" onClick={onClose}><X className="h-4 w-4" /></button>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative liquid-surface liquid-border rounded-xl p-6 w-[400px] shadow-xl backdrop-blur-xl liquid-highlight">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold">Edit Event</h4>
+          <button className="text-muted-foreground hover:text-foreground transition-colors" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <div className="space-y-2">
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} />
-          <div className="flex gap-2">
+        <div className="space-y-4">
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} className="liquid-surface border rounded-lg" />
+          <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} className="liquid-surface border rounded-lg" />
+          <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs text-muted-foreground">Date</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <label className="text-xs text-muted-foreground block mb-2">Date</label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="liquid-surface border rounded-lg" />
             </div>
             <div className="flex-1 flex items-end gap-2">
               <div className="flex-1">
-                <label className="text-xs text-muted-foreground">Start</label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={allDay} />
+                <label className="text-xs text-muted-foreground block mb-2">Start</label>
+                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={allDay} className="liquid-surface border rounded-lg" />
               </div>
               <div className="flex-1">
-                <label className="text-xs text-muted-foreground">End</label>
-                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={allDay} />
+                <label className="text-xs text-muted-foreground block mb-2">End</label>
+                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={allDay} className="liquid-surface border rounded-lg" />
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm inline-flex items-center gap-2"><input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} /> All-day</label>
-            <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm inline-flex items-center gap-3">
+              <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="h-4 w-4 accent-primary" /> 
+              All-day
+            </label>
+            <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground">Reminder</span>
-              <select className="text-sm border rounded-md px-2 py-1 bg-background" value={String(reminder)} onChange={(e) => setReminder(e.target.value)}>
+              <select className="text-sm liquid-surface border rounded-lg px-3 py-2 bg-background backdrop-blur-sm" value={String(reminder)} onChange={(e) => setReminder(e.target.value)}>
                 <option value="none">None</option>
                 <option value="5">5 min</option>
                 <option value="10">10 min</option>
@@ -594,9 +614,13 @@ function EditEventDialog({ event, onClose, onSave, onDelete }: { event: DbEvent;
               </select>
             </div>
           </div>
-          <div className="flex gap-2 pt-2">
-            <Button size="sm" onClick={submit}>Save</Button>
-            <Button size="sm" variant="destructive" onClick={() => { onDelete(); onClose(); }}><Trash2 className="h-4 w-4 mr-1" />Delete</Button>
+          <div className="flex gap-3 pt-4">
+            <Button size="sm" onClick={submit} className="liquid-surface liquid-border backdrop-blur-sm">
+              Save Changes
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => { onDelete(); onClose(); }} className="liquid-surface liquid-border backdrop-blur-sm">
+              <Trash2 className="h-4 w-4 mr-2" />Delete
+            </Button>
           </div>
         </div>
       </div>
