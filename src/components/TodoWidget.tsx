@@ -286,7 +286,7 @@ export const TodoWidget = () => {
 
   // --- UI ---
   return (
-    <div className="widget-card h-full flex flex-col">
+    <div className="widget-card h-full flex flex-col p-6 container-safe">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -303,7 +303,7 @@ export const TodoWidget = () => {
             <select
               value={filterTag}
               onChange={(e) => setFilterTag(e.target.value)}
-              className="text-sm bg-transparent border rounded-md px-2 py-1"
+              className="text-sm liquid-surface liquid-border rounded-md px-2 py-1"
               aria-label="Filter by tag"
             >
               <option value="">All</option>
@@ -317,7 +317,7 @@ export const TodoWidget = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm bg-transparent border rounded-md px-2 py-1"
+              className="text-sm liquid-surface liquid-border rounded-md px-2 py-1"
               aria-label="Sort"
             >
               <option value="default">Newest</option>
@@ -330,7 +330,7 @@ export const TodoWidget = () => {
               role="switch"
               aria-checked={showCompleted}
               onClick={() => setShowCompleted((v) => !v)}
-              className={`text-xs inline-flex items-center gap-2 border rounded-full px-2 py-1 transition-colors ${
+              className={`text-xs inline-flex items-center gap-2 border rounded-full px-2 py-1 transition-colors widget-interactive ${
                 showCompleted ? "bg-primary/10 border-primary/30 text-primary" : "bg-transparent border-border text-muted-foreground"
               }`}
             >
@@ -349,7 +349,7 @@ export const TodoWidget = () => {
             onClick={() => setIsAdding(true)}
             variant="ghost"
             size="sm"
-            className="text-primary hover:bg-primary/10"
+            className="btn-liquid text-primary hover:bg-primary/10"
             aria-label="Add task"
           >
             <Plus className="h-4 w-4" />
@@ -358,9 +358,9 @@ export const TodoWidget = () => {
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-secondary rounded-full h-2 mb-4">
+      <div className="w-full bg-secondary/50 backdrop-blur-sm rounded-full h-2 mb-4 overflow-hidden">
         <div
-          className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500"
+          className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500 shimmer-effect"
           style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : "0%" }}
         />
       </div>
@@ -515,10 +515,10 @@ const TodoRow = ({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      className={`flex flex-col gap-2 p-3 rounded-lg border transition-all duration-150 fade-in cursor-grab active:cursor-grabbing ${
+      className={`flex flex-col gap-2 p-3 rounded-lg border transition-all duration-150 fade-in-liquid cursor-grab active:cursor-grabbing widget-interactive ${
         todo.completed
-          ? "bg-green-500/20 border-green-500/30"
-          : "bg-accent/30 border-border hover:bg-accent/50"
+          ? "bg-green-500/20 border-green-500/30 liquid-surface"
+          : "liquid-surface liquid-border hover:liquid-highlight"
       }`}
       style={{ animationDelay: `${idx * 0.05}s` }}
     >
@@ -607,7 +607,7 @@ const TodoRow = ({
             variant="ghost"
             size="icon"
             aria-label="Edit task"
-            className="h-7 w-7"
+            className="h-7 w-7 btn-liquid"
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -616,7 +616,7 @@ const TodoRow = ({
             variant="ghost"
             size="icon"
             aria-label="Delete task"
-            className="h-7 w-7 text-red-500 hover:text-red-600"
+            className="h-7 w-7 btn-liquid text-red-500 hover:text-red-600"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -632,7 +632,7 @@ const TodoRow = ({
             variant="ghost"
             size="icon"
             aria-label="Add tag"
-            className="h-7 w-7"
+            className="h-7 w-7 btn-liquid"
           >
             <Tag className="h-4 w-4" />
           </Button>
@@ -641,7 +641,7 @@ const TodoRow = ({
             variant="ghost"
             size="icon"
             aria-label={open ? "Hide details" : "Show details"}
-            className="h-7 w-7"
+            className="h-7 w-7 btn-liquid"
           >
             {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
@@ -650,7 +650,7 @@ const TodoRow = ({
 
       {/* Details */}
       {open && (
-        <div className="rounded-md border bg-background p-3 space-y-3">
+        <div className="rounded-md liquid-border liquid-surface p-3 space-y-3 backdrop-blur-md">
           {/* Priority / Recurring */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 auto-rows-min">
             <div className="flex items-center gap-2 min-w-0">
@@ -658,7 +658,7 @@ const TodoRow = ({
               <select
                 value={todo.priority}
                 onChange={(e) => onPriority(e.target.value as Priority)}
-                className="text-sm bg-transparent border rounded-md px-2 py-1 w-full"
+                className="text-sm liquid-surface liquid-border rounded-md px-2 py-1 w-full"
               >
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
@@ -671,7 +671,7 @@ const TodoRow = ({
               <select
                 value={todo.recurring}
                 onChange={(e) => onRecurring(e.target.value as Recurring)}
-                className="text-sm bg-transparent border rounded-md px-2 py-1 w-full"
+                className="text-sm liquid-surface liquid-border rounded-md px-2 py-1 w-full"
               >
                 <option value="none">None</option>
                 <option value="daily">Daily</option>
@@ -688,13 +688,13 @@ const TodoRow = ({
                 onChange={(e) =>
                   onDeadline(e.target.value ? localDTToIso(e.target.value) : null)
                 }
-                className="text-sm bg-transparent border rounded-md px-2 py-1 w-full min-w-0"
+                className="text-sm liquid-surface liquid-border rounded-md px-2 py-1 w-full min-w-0"
               />
               {todo.deadline && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-7 w-7 shrink-0 btn-liquid"
                   onClick={() => onDeadline(null)}
                   aria-label="Clear deadline"
                 >
@@ -728,6 +728,7 @@ const TodoRow = ({
               <Button
                 variant="secondary"
                 size="sm"
+                className="btn-liquid"
                 onClick={() => {
                   const items = tagDraft
                     .split(",")
@@ -776,6 +777,7 @@ const TodoRow = ({
                   placeholder="Add a subtask..."
                   value={subtaskDraft}
                   onChange={(e) => setSubtaskDraft(e.target.value)}
+                  className="liquid-surface liquid-border"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const txt = subtaskDraft.trim();
@@ -787,6 +789,7 @@ const TodoRow = ({
                 <Button
                   variant="secondary"
                   size="sm"
+                  className="btn-liquid"
                   onClick={() => {
                     const txt = subtaskDraft.trim();
                     if (txt) onAddSubtask(txt);

@@ -46,7 +46,7 @@ export const FocusWidget = () => {
   };
 
   return (
-    <div className="widget-card widget-focus h-full">
+    <div className="widget-card widget-focus h-full container-safe p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Target className="h-5 w-5 text-[hsl(var(--accent-orange))]" />
@@ -55,7 +55,7 @@ export const FocusWidget = () => {
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-[hsl(var(--accent-orange))]">
+              <Button variant="ghost" size="sm" className="btn-liquid text-muted-foreground hover:text-[hsl(var(--accent-orange))]">
                 <CalendarIcon className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -64,7 +64,7 @@ export const FocusWidget = () => {
             </PopoverContent>
           </Popover>
           {!isEditing && (
-            <Button onClick={() => setIsEditing(true)} variant="ghost" size="sm" className="text-muted-foreground hover:text-[hsl(var(--accent-orange))]">
+            <Button onClick={() => setIsEditing(true)} variant="ghost" size="sm" className="btn-liquid text-muted-foreground hover:text-[hsl(var(--accent-orange))]">
               <Edit3 className="h-4 w-4" />
             </Button>
           )}
@@ -81,27 +81,27 @@ export const FocusWidget = () => {
         {loading ? (
           <div className="text-muted-foreground">Loading…</div>
         ) : isEditing ? (
-          <div className="space-y-4 slide-up">
+          <div className="space-y-4 slide-up-liquid">
             <Input
               value={tempFocus}
               onChange={(e) => setTempFocus(e.target.value)}
               placeholder="What's your main focus today?"
-              className="text-center text-lg font-medium"
+              className="text-center text-lg font-medium liquid-surface liquid-border"
               autoFocus
             />
             <div className="flex gap-2 justify-center">
-              <Button onClick={handleSave} size="sm" className="btn-gradient">
+              <Button onClick={handleSave} size="sm" className="btn-gradient-liquid">
                 <Check className="h-4 w-4 mr-1" />
                 Save
               </Button>
-              <Button onClick={handleCancel} variant="ghost" size="sm">
+              <Button onClick={handleCancel} variant="ghost" size="sm" className="btn-liquid">
                 Cancel
               </Button>
             </div>
           </div>
         ) : (
-          <div className="fade-in">
-            <h4 className="text-xl font-bold text-foreground mb-2 leading-tight">
+          <div className="fade-in-liquid">
+            <h4 className="text-xl font-bold text-foreground mb-2 leading-tight text-break-safe">
               {focus}
             </h4>
             <p className="text-sm text-muted-foreground">
@@ -116,7 +116,7 @@ export const FocusWidget = () => {
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">Progress</p>
             <button
-              className={`text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md ${completed ? 'text-[hsl(var(--accent-orange))]' : 'text-muted-foreground'} btn-glass`}
+              className={`text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md btn-liquid ${completed ? 'text-[hsl(var(--accent-orange))]' : 'text-muted-foreground'}`}
               onClick={() => {
                 const next = !completed
                 setCompleted(next)

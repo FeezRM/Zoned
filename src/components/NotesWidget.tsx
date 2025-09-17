@@ -84,7 +84,7 @@ export const NotesWidget = () => {
   };
 
   return (
-    <div className="widget-card h-full flex flex-col">
+    <div className="widget-card h-full flex flex-col container-safe p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Quick Notes</h3>
@@ -94,7 +94,7 @@ export const NotesWidget = () => {
           onClick={() => setIsAdding(true)}
           variant="ghost"
           size="sm"
-          className="text-primary hover:bg-primary/10"
+          className="btn-liquid text-primary hover:bg-primary/10"
         >
           <Plus className="h-4 w-4" />
         </Button>
@@ -102,20 +102,20 @@ export const NotesWidget = () => {
 
       {/* Add new note */}
       {isAdding && (
-        <div className="mb-4 slide-up">
+        <div className="mb-4 slide-up-liquid">
           <Textarea
             placeholder="Jot down your thoughts..."
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
-            className="mb-2 min-h-[80px] resize-none"
+            className="mb-2 min-h-[80px] resize-none liquid-surface liquid-border"
             autoFocus
           />
           <div className="flex gap-2">
-            <Button onClick={addNote} size="sm" className="btn-gradient">
+            <Button onClick={addNote} size="sm" className="btn-gradient-liquid">
               <Save className="h-3 w-3 mr-1" />
               Save
             </Button>
-            <Button onClick={() => setIsAdding(false)} variant="ghost" size="sm">
+            <Button onClick={() => setIsAdding(false)} variant="ghost" size="sm" className="btn-liquid">
               Cancel
             </Button>
           </div>
@@ -127,7 +127,7 @@ export const NotesWidget = () => {
         {notes.map((note, index) => (
           <div 
             key={note.id}
-            className="bg-accent/30 border border-border rounded-lg p-4 fade-in hover:bg-accent/50 transition-colors group"
+            className="liquid-surface liquid-border rounded-lg p-4 fade-in-liquid liquid-highlight widget-interactive transition-colors group"
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             {editingId === note.id ? (
@@ -157,7 +157,7 @@ export const NotesWidget = () => {
                       onClick={() => startEdit(note)}
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0"
+                      className="h-6 w-6 p-0 btn-liquid"
                     >
                       <Edit3 className="h-3 w-3" />
                     </Button>
@@ -165,7 +165,7 @@ export const NotesWidget = () => {
                       onClick={() => deleteNote(note.id)}
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+                      className="h-6 w-6 p-0 btn-liquid text-red-500 hover:text-red-600"
                     >
                       <X className="h-3 w-3" />
                     </Button>

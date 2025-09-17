@@ -59,7 +59,7 @@ export function EventsCalendarDialogButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="btn-glass" aria-label="Open calendar">
+        <Button variant="ghost" size="sm" className="btn-liquid" aria-label="Open calendar">
           <CalendarIcon className="h-4 w-4" />
         </Button>
       </DialogTrigger>

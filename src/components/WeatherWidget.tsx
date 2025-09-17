@@ -51,7 +51,7 @@ export const WeatherWidget = () => {
           <Cloud className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Weather unavailable</p>
           <div className="mt-2">
-            <button className="btn-glass text-xs px-3 py-1" onClick={refresh}>Retry</button>
+            <button className="btn-liquid text-xs px-3 py-1" onClick={refresh}>Retry</button>
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@ export const WeatherWidget = () => {
   if (!weather) return null;
 
   return (
-    <div className="widget-card h-full">
+    <div className="widget-card h-full container-safe p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground">Weather</h3>
         <div className="flex items-center gap-2">
@@ -70,7 +70,7 @@ export const WeatherWidget = () => {
           </div>
           <div className="flex items-center gap-1">
             <button
-              className={`px-2 py-1 text-xs rounded-md btn-glass ${unit==='c' ? 'text-foreground' : 'text-muted-foreground'}`}
+              className={`px-2 py-1 text-xs rounded-md btn-liquid ${unit==='c' ? 'text-foreground' : 'text-muted-foreground'}`}
               onClick={async ()=> {
                 setUnit('c')
                 if (profile) {
@@ -80,7 +80,7 @@ export const WeatherWidget = () => {
               }}
             >°C</button>
             <button
-              className={`px-2 py-1 text-xs rounded-md btn-glass ${unit==='f' ? 'text-foreground' : 'text-muted-foreground'}`}
+              className={`px-2 py-1 text-xs rounded-md btn-liquid ${unit==='f' ? 'text-foreground' : 'text-muted-foreground'}`}
               onClick={async ()=> {
                 setUnit('f')
                 if (profile) {
@@ -97,12 +97,12 @@ export const WeatherWidget = () => {
 
       {/* Current weather */}
       <div className="flex items-center justify-between mb-6">
-        <div>
+        <div className="flex-1 min-w-0 pr-4">
           <p className="text-3xl font-bold text-foreground">{weather.temperature}°</p>
-          <p className="text-sm text-muted-foreground">{weather.condition}</p>
-          <p className="text-xs text-muted-foreground">{weather.location}</p>
+          <p className="text-sm text-muted-foreground text-break-safe">{weather.condition}</p>
+          <p className="text-xs text-muted-foreground text-overflow-safe">{weather.location}</p>
         </div>
-        <div className="text-right">
+        <div className="text-right flex-shrink-0">
           <div className="text-6xl">
             {getWeatherIcon(weather.forecast[0]?.icon || "sunny")}
           </div>
@@ -111,12 +111,12 @@ export const WeatherWidget = () => {
 
       {/* Weather details */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-accent/30 rounded-lg p-3 text-center">
+        <div className="liquid-surface liquid-border rounded-lg p-3 text-center liquid-highlight">
           <Wind className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">Wind</p>
           <p className="text-sm font-medium">{weather.windSpeed} {unit==='f' ? 'mph' : 'km/h'}</p>
         </div>
-        <div className="bg-accent/30 rounded-lg p-3 text-center">
+        <div className="liquid-surface liquid-border rounded-lg p-3 text-center liquid-highlight">
           <div className="w-4 h-4 mx-auto mb-1 bg-blue-400 rounded-full opacity-60" />
           <p className="text-xs text-muted-foreground">Humidity</p>
           <p className="text-sm font-medium">{weather.humidity}%</p>
@@ -130,14 +130,14 @@ export const WeatherWidget = () => {
           {weather.forecast.map((day, index) => (
             <div 
               key={day.day}
-              className="flex items-center justify-between py-2 px-3 rounded-lg bg-accent/20 fade-in"
+              className="flex items-center justify-between py-2 px-3 rounded-lg liquid-surface liquid-border widget-interactive fade-in-liquid"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 {getWeatherIcon(day.icon)}
-                <span className="text-sm font-medium">{day.day}</span>
+                <span className="text-sm font-medium text-overflow-safe">{day.day}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm flex-shrink-0">
                 <span className="font-medium">{day.high}°</span>
                 <span className="text-muted-foreground">{day.low}°</span>
               </div>

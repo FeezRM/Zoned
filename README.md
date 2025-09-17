@@ -1,4 +1,6 @@
-<div align="center">
+<div align## Vision
+
+Craft a life you're proud of—without burning out. Zoned helps you:enter">
 
 # Zoned
 

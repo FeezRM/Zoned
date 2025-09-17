@@ -28,7 +28,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             <div className="flex items-center gap-2">
               <label className="text-sm w-40">Theme</label>
               <select
-                className="border rounded-md px-2 py-1 bg-background"
+                className="liquid-surface liquid-border rounded-md px-2 py-1"
                 value={draft.appearance.theme}
                 onChange={(e) => setDraft({ ...draft, appearance: { ...draft.appearance, theme: e.target.value as any } })}
               >
@@ -55,7 +55,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             <div className="flex items-center gap-2">
               <label className="text-sm w-40">Default reminder</label>
               <select
-                className="border rounded-md px-2 py-1 bg-background"
+                className="liquid-surface liquid-border rounded-md px-2 py-1"
                 value={String(draft.reminders.defaultMinutes)}
                 onChange={(e) => setDraft({ ...draft, reminders: { ...draft.reminders, defaultMinutes: e.target.value === "null" ? null : Number(e.target.value) } })}
               >
@@ -70,8 +70,8 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           </section>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={apply}>Save</Button>
+            <Button variant="ghost" onClick={() => onOpenChange(false)} className="btn-liquid">Cancel</Button>
+            <Button onClick={apply} className="btn-gradient-liquid">Save</Button>
           </div>
         </div>
       </DialogContent>

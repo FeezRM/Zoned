@@ -145,7 +145,7 @@ export const HabitWidget = () => {
   const completionRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0
 
   return (
-    <div className="widget-card widget-habits h-full overflow-hidden">
+    <div className="widget-card widget-habits h-full overflow-hidden container-safe p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Daily Habits</h3>
@@ -154,7 +154,7 @@ export const HabitWidget = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn-glass text-xs px-2 py-1" onClick={() => setAdding((v) => !v)}>
+          <button className="btn-liquid text-xs px-2 py-1" onClick={() => setAdding((v) => !v)}>
             <Plus className="h-4 w-4" />
           </button>
           <div className="flex items-center gap-1 text-[hsl(var(--accent-green))]" title="All-habits streak (days in a row all habits were completed)">
@@ -181,10 +181,10 @@ export const HabitWidget = () => {
 
       {/* Add new habit: below progress, with name field on its own row */}
       {adding && (
-        <div className="mb-4 bg-accent/30 border border-border rounded-lg p-3">
+        <div className="mb-4 liquid-surface liquid-border rounded-lg p-3 liquid-highlight">
           <div className="mb-2">
             <input
-              className="w-full text-sm bg-transparent border rounded-md px-2 py-2"
+              className="w-full text-sm liquid-surface liquid-border rounded-md px-2 py-2"
               placeholder="New habit name (e.g. Read 20 pages)"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -194,7 +194,7 @@ export const HabitWidget = () => {
           <div className="flex items-center gap-2">
             <div className="shrink-0 w-32">
               <Select value={newIcon} onValueChange={setNewIcon}>
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="h-8 text-sm liquid-surface liquid-border">
                   <SelectValue placeholder="Icon" />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,8 +204,8 @@ export const HabitWidget = () => {
                 </SelectContent>
               </Select>
             </div>
-            <button className="btn-glass text-xs px-3 py-2 shrink-0" onClick={addHabit}><Save className="h-4 w-4"/></button>
-            <button className="btn-glass text-xs px-3 py-2 shrink-0" onClick={()=>{setAdding(false); setNewName(''); setNewIcon('✅')}}><X className="h-4 w-4"/></button>
+            <button className="btn-liquid text-xs px-3 py-2 shrink-0" onClick={addHabit}><Save className="h-4 w-4"/></button>
+            <button className="btn-liquid text-xs px-3 py-2 shrink-0" onClick={()=>{setAdding(false); setNewName(''); setNewIcon('✅')}}><X className="h-4 w-4"/></button>
           </div>
         </div>
       )}
@@ -244,11 +244,11 @@ export const HabitWidget = () => {
               setDragId(null)
             }}
             onDragEnd={()=> setDragId(null)}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-150 fade-in cursor-grab active:cursor-grabbing ${dragId===habit.id ? 'opacity-80 scale-[0.99]' : ''} ${habit.completed ? 'bg-green-500/20 border border-green-500/30' : 'bg-accent/30 border border-border hover:bg-accent/50'}`}
+            className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-150 fade-in-liquid cursor-grab active:cursor-grabbing widget-interactive ${dragId===habit.id ? 'opacity-80 scale-[0.99]' : ''} ${habit.completed ? 'liquid-surface liquid-border-success liquid-highlight shimmer-effect' : 'liquid-surface liquid-border liquid-highlight hover:bg-accent/50'}`}
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <button
-              className="btn-glass text-xs p-1 rounded-md shrink-0"
+              className="btn-liquid text-xs p-1 rounded-md shrink-0"
               onClick={(e)=>{e.preventDefault(); e.stopPropagation(); toggleHabit(habit.id)}}
               disabled={pendingToggleIds.has(habit.id)}
               aria-label={habit.completed ? 'Uncheck habit' : 'Check habit'}
@@ -266,10 +266,10 @@ export const HabitWidget = () => {
               <div className="flex items-center gap-2">
                 {editingId === habit.id ? (
                   <div className="flex items-center gap-2 w-full">
-                    <input className="text-sm bg-transparent border rounded-md px-2 py-1 flex-1 min-w-0" value={editName} onChange={(e)=>setEditName(e.target.value)} />
+                    <input className="text-sm liquid-surface liquid-border rounded-md px-2 py-1 flex-1 min-w-0" value={editName} onChange={(e)=>setEditName(e.target.value)} />
                     <div className="w-24">
                       <Select value={editIcon} onValueChange={setEditIcon}>
-                        <SelectTrigger className="h-8 text-sm">
+                        <SelectTrigger className="h-8 text-sm liquid-surface liquid-border">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -279,8 +279,8 @@ export const HabitWidget = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <button className="btn-glass text-xs px-2 py-1" onClick={(e)=>{e.stopPropagation(); saveEdit()}}><Save className="h-4 w-4"/></button>
-                    <button className="btn-glass text-xs px-2 py-1" onClick={(e)=>{e.stopPropagation(); cancelEdit()}}><X className="h-4 w-4"/></button>
+                    <button className="btn-liquid text-xs px-2 py-1" onClick={(e)=>{e.stopPropagation(); saveEdit()}}><Save className="h-4 w-4"/></button>
+                    <button className="btn-liquid text-xs px-2 py-1" onClick={(e)=>{e.stopPropagation(); cancelEdit()}}><X className="h-4 w-4"/></button>
                   </div>
                 ) : (
                   <p className={`text-sm font-medium truncate ${habit.completed ? 'text-green-700' : 'text-foreground'}`}>{habit.name}</p>
@@ -295,8 +295,8 @@ export const HabitWidget = () => {
             </div>
 
             <div className="flex-shrink-0 flex items-center gap-1">
-              <button className="btn-glass text-xs px-2 py-1" onClick={(e)=>{e.stopPropagation(); setEditingId(habit.id); setEditName(habit.name); setEditIcon(habit.icon)}}><Pencil className="h-4 w-4"/></button>
-              <button className="btn-glass text-xs px-2 py-1 text-red-500" onClick={(e)=>{e.stopPropagation(); deleteHabit(habit.id)}}><Trash2 className="h-4 w-4"/></button>
+              <button className="btn-liquid text-xs px-2 py-1" onClick={(e)=>{e.stopPropagation(); setEditingId(habit.id); setEditName(habit.name); setEditIcon(habit.icon)}}><Pencil className="h-4 w-4"/></button>
+              <button className="btn-liquid text-xs px-2 py-1 text-red-500" onClick={(e)=>{e.stopPropagation(); deleteHabit(habit.id)}}><Trash2 className="h-4 w-4"/></button>
             </div>
           </div>
         ))}

@@ -50,7 +50,7 @@ export const MoodWidget = () => {
   };
 
   return (
-    <div className="widget-card widget-mood h-full">
+    <div className="widget-card widget-mood h-full container-safe p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Mood Tracker</h3>
@@ -61,7 +61,7 @@ export const MoodWidget = () => {
 
       {/* Current mood display */}
       {selectedMood && (
-        <div className="text-center mb-6 fade-in">
+        <div className="text-center mb-6 fade-in-liquid">
           <div className="text-6xl mb-2">{selectedMood.emoji}</div>
           <p className="text-lg font-medium text-foreground">{selectedMood.label}</p>
           <p className="text-sm text-muted-foreground">Today's mood</p>
@@ -76,10 +76,10 @@ export const MoodWidget = () => {
             <button
               key={mood.value}
               onClick={() => handleMoodSelect(mood)}
-      className={`w-full p-3 rounded-lg transition-all duration-200 hover:scale-105 fade-in ${
+      className={`w-full p-3 rounded-lg transition-all duration-200 hover:scale-105 fade-in-liquid widget-interactive ${
                 selectedMood?.value === mood.value
-                  ? 'bg-[hsl(var(--accent-blue))]/20 border-2 border-[hsl(var(--accent-blue))]'
-                  : 'bg-white/30 border border-white/20 hover:bg-white/50'
+                  ? 'liquid-surface liquid-border-active shimmer-effect'
+                  : 'liquid-surface liquid-border liquid-highlight hover:liquid-shadow'
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -91,7 +91,7 @@ export const MoodWidget = () => {
       </div>
 
       {/* Weekly trend */}
-      <div className="bg-white/20 rounded-lg p-4">
+      <div className="liquid-surface liquid-border rounded-lg p-4 liquid-highlight">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-foreground">Weekly Average</span>
           <TrendingUp className="h-4 w-4 text-[hsl(var(--accent-blue))]" />
@@ -102,9 +102,9 @@ export const MoodWidget = () => {
           </span>
           <span className="text-sm text-muted-foreground">/ 5.0</span>
         </div>
-        <div className="w-full bg-white/20 rounded-full h-2 mt-2">
+        <div className="w-full liquid-surface rounded-full h-2 mt-2">
           <div 
-            className="bg-gradient-to-r from-[hsl(var(--accent-blue))] to-blue-400 h-2 rounded-full transition-all duration-500"
+            className="bg-gradient-to-r from-[hsl(var(--accent-blue))] to-blue-400 h-2 rounded-full transition-all duration-500 shimmer-effect"
             style={{ width: `${(weeklyAverage / 5) * 100}%` }}
           />
         </div>
