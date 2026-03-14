@@ -213,7 +213,3 @@ Storage (avatars): create a bucket (e.g., `avatars`) and add a policy to allow u
 ## Contributing
 
 Issues and PRs are welcome while this is in active development. Please keep changes scoped and include a short before/after note or screenshot where applicable.
-
-## License
-
-© Zoned All Rights Reserved. If you plan to fork/ship this, open an issue so we can clarify licensing.
